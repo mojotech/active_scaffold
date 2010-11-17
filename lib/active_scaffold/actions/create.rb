@@ -30,7 +30,7 @@ module ActiveScaffold::Actions
         return_to_main
       end
     end
-    
+
     def new_respond_to_js
       render(:partial => 'create_form')
     end
@@ -97,7 +97,7 @@ module ActiveScaffold::Actions
           @record = update_record_from_params(new_model, active_scaffold_config.create.columns, params[:record])
           apply_constraints_to_record(@record, :allow_autosave => true)
           if nested?
-            create_association_with_parent(@record) 
+            create_association_with_parent(@record)
             register_constraints_with_action_columns(nested.constrained_fields)
           end
           before_create_save(@record)
@@ -129,11 +129,11 @@ module ActiveScaffold::Actions
 
     # The default security delegates to ActiveRecordPermissions.
     # You may override the method to customize.
-    
+
     def create_ignore?
       nested? && active_scaffold_config.list.always_show_create
     end
-    
+
     def create_authorized?
       (!nested? || !nested.readonly?) && authorized_for?(:crud_type => :create)
     end

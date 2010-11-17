@@ -4,7 +4,7 @@ module ActiveScaffold::Actions
     def store_search_params_into_session
       active_scaffold_session_storage[:search] = params.delete :search if params[:search]
     end
-    
+
     def search_params
       active_scaffold_session_storage[:search]
     end
@@ -12,7 +12,7 @@ module ActiveScaffold::Actions
     def search_ignore?
       active_scaffold_config.list.always_show_search
     end
-    
+
     # The default security delegates to ActiveRecordPermissions.
     # You may override the method to customize.
     def search_authorized?

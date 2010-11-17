@@ -20,16 +20,16 @@ module ActiveScaffold::Actions
         value = column_value_from_param_value(@record, column, params[:value])
         @record.send "#{column.name}=", value
         after_render_field(@record, column)
-        render :partial => "render_field", :collection => Array(params[:update_columns]), :content_type => 'text/javascript' 
+        render :partial => "render_field", :collection => Array(params[:update_columns]), :content_type => 'text/javascript'
       end
     end
-    
+
     protected
 
     def nested?
       false
     end
-    
+
     # override this method if you want to do something after render_field
     def after_render_field(record, column); end
 
@@ -99,21 +99,21 @@ module ActiveScaffold::Actions
     # Override this method on your controller to define conditions to be used when querying a recordset (e.g. for List). The return of this method should be any format compatible with the :conditions clause of ActiveRecord::Base's find.
     def conditions_for_collection
     end
-  
+
     # Override this method on your controller to define joins to be used when querying a recordset (e.g. for List).  The return of this method should be any format compatible with the :joins clause of ActiveRecord::Base's find.
     def joins_for_collection
     end
-  
+
     # Override this method on your controller to provide custom finder options to the find() call. The return of this method should be a hash.
     def custom_finder_options
       {}
     end
-  
+
     #Overide this method on your controller to provide model with named scopes
     def beginning_of_chain
       active_scaffold_config.model
     end
-        
+
     # Builds search conditions by search params for column names. This allows urls like "contacts/list?company_id=5".
     def conditions_from_params
       conditions = nil

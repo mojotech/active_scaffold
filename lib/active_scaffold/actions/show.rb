@@ -11,7 +11,7 @@ module ActiveScaffold::Actions
     end
 
     protected
-    
+
     def show_respond_to_json
       render :text => response_object.to_json(:only => active_scaffold_config.show.columns.names), :content_type => Mime::JSON, :status => response_status
     end
@@ -42,7 +42,7 @@ module ActiveScaffold::Actions
     def show_authorized?(record = nil)
       authorized_for?(:crud_type => :read)
     end
-    private 
+    private
     def show_authorized_filter
       link = active_scaffold_config.show.link || active_scaffold_config.show.class.link
       raise ActiveScaffold::ActionNotAllowed unless self.send(link.security_method)

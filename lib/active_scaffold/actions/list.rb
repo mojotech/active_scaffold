@@ -21,7 +21,7 @@ module ActiveScaffold::Actions
       @nested_auto_open = active_scaffold_config.list.nested_auto_open
       respond_to_action(:list)
     end
-    
+
     protected
     def list_respond_to_html
       if params.delete(:embedded)
@@ -60,7 +60,7 @@ module ActiveScaffold::Actions
       if paginate
         options.merge!({
           :per_page => active_scaffold_config.list.user.per_page,
-          :page => active_scaffold_config.list.user.page, 
+          :page => active_scaffold_config.list.user.page,
           :pagination => active_scaffold_config.list.pagination
         })
       end
@@ -89,7 +89,7 @@ module ActiveScaffold::Actions
     def list_authorized?
       authorized_for?(:crud_type => :read)
     end
-    
+
     def action_update_respond_to_js
       render(:action => 'on_action_update')
     end
@@ -105,7 +105,7 @@ module ActiveScaffold::Actions
     def action_update_respond_to_yaml
       render :text => successful? ? "" : Hash.from_xml(response_object.to_xml(:only => list_columns_names)).to_yaml, :content_type => Mime::YAML, :status => response_status
     end
-     
+
     private
     def list_authorized_filter
       raise ActiveScaffold::ActionNotAllowed unless list_authorized?

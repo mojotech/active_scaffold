@@ -23,11 +23,11 @@ module ActiveScaffold::Actions
       end
       @nested
     end
-    
+
     def nested?
       !nested.nil?
     end
-    
+
     def set_nested
       if params[:parent_model] && ((params[:association] && params[:assoc_id]) || params[:named_scope])
         @nested = nil
@@ -37,7 +37,7 @@ module ActiveScaffold::Actions
         params.delete_if {|key, value| [:parent_model, :association, :named_scope, :assoc_id].include? key.to_sym}
       end
     end
-    
+
     def configure_nested
       if nested?
         active_scaffold_session_storage[:list][:label] =  if nested.belongs_to?
@@ -50,7 +50,7 @@ module ActiveScaffold::Actions
         end
       end
     end
-    
+
     def nested_authorized?(record = nil)
       true
     end
@@ -67,7 +67,7 @@ module ActiveScaffold::Actions
         else
           # Production mode is caching this link into a non nested scaffold
           active_scaffold_config.action_links.delete('new_existing') if active_scaffold_config.action_links['new_existing']
-          
+
           if active_scaffold_config.nested.shallow_delete
             active_scaffold_config.action_links.delete("destroy_existing") if active_scaffold_config.action_links['destroy_existing']
             active_scaffold_config.action_links.add(ActiveScaffold::Config::Delete.link) unless active_scaffold_config.action_links['delete']
@@ -75,7 +75,7 @@ module ActiveScaffold::Actions
         end
       end
     end
-    
+
     def beginning_of_chain
       if nested? && nested.association && nested.association.collection?
         nested.parent_scope.send(nested.association.name)
@@ -89,9 +89,9 @@ module ActiveScaffold::Actions
     def nested_parent_record(crud = :read)
       find_if_allowed(nested.parent_id, crud, nested.parent_model)
     end
-       
+
     def create_association_with_parent(record)
-      if nested? && nested.belongs_to? && nested.child_association 
+      if nested? && nested.belongs_to? && nested.child_association
         parent = nested_parent_record(:read)
         case nested.child_association.macro
         when :has_one
@@ -101,7 +101,7 @@ module ActiveScaffold::Actions
         end unless parent.nil?
       end
     end
-    
+
     private
     def nested_formats
       (default_formats + active_scaffold_config.formats + active_scaffold_config.nested.formats).uniq
@@ -134,7 +134,7 @@ module ActiveScaffold::Actions::Nested
       do_destroy_existing
       respond_to_action(:destroy_existing)
     end
-    
+
     protected
     def new_existing_respond_to_html
       if successful?
@@ -197,7 +197,7 @@ module ActiveScaffold::Actions::Nested
     def delete_existing_authorized?(record = nil)
       true
     end
- 
+
     def after_create_save(record)
       if params[:association_macro] == :has_and_belongs_to_many
         params[:associated_id] = record

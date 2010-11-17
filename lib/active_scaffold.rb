@@ -32,7 +32,7 @@ module ActiveScaffold
   def self.set_defaults(&block)
     ActiveScaffold::Config::Core.configure &block
   end
-  
+
   def active_scaffold_config
     self.class.active_scaffold_config
   end
@@ -59,11 +59,11 @@ module ActiveScaffold
       end
     end
   end
-  
+
   def self.js_framework=(framework)
     @@js_framework = framework
   end
-  
+
   def self.js_framework
     @@js_framework ||= :prototype
   end
@@ -135,33 +135,33 @@ module ActiveScaffold
         column.set_link(action_link) unless action_link.nil?
       end
     end
-    
+
     def link_for_association(column, options = {})
       begin
-        controller = column.polymorphic_association? ? :polymorph : active_scaffold_controller_for(column.association.klass) 
+        controller = column.polymorphic_association? ? :polymorph : active_scaffold_controller_for(column.association.klass)
       rescue ActiveScaffold::ControllerNotFound
-        controller = nil        
+        controller = nil
       end
-      
+
       unless controller.nil?
         options.reverse_merge! :label => column.label, :position => :after, :type => :member, :controller => (controller == :polymorph ? controller : controller.controller_path), :column => column
         options[:parameters] ||= {}
         options[:parameters].reverse_merge! :parent_model => column.active_record_class.to_s.underscore, :association => column.association.name
         if column.plural_association?
           # note: we can't create nested scaffolds on :through associations because there's no reverse association.
-          
+
           ActiveScaffold::DataStructures::ActionLink.new('index', options) #unless column.through_association?
         else
-          actions = [:create, :update, :show] 
+          actions = [:create, :update, :show]
           actions = controller.active_scaffold_config.actions unless controller == :polymorph
           column.actions_for_association_links.delete :new unless actions.include? :create
           column.actions_for_association_links.delete :edit unless actions.include? :update
           column.actions_for_association_links.delete :show unless actions.include? :show
           ActiveScaffold::DataStructures::ActionLink.new(:none, options.merge({:crud_type => nil, :html_options => {:class => column.name}}))
-        end 
+        end
       end
     end
-    
+
     def link_for_association_as_scope(scope, options = {})
       options.reverse_merge! :label => scope, :position => :after, :type => :member, :controller => controller_path
       options[:parameters] ||= {}

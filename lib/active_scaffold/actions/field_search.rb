@@ -16,19 +16,19 @@ module ActiveScaffold::Actions
     end
 
     protected
-    
+
     def store_search_params_into_session
       set_field_search_default_params(active_scaffold_config.field_search.default_params) unless active_scaffold_config.field_search.default_params.nil?
       super
       active_scaffold_session_storage[:search] = nil if search_params.is_a?(String)
     end
-    
+
     def set_field_search_default_params(default_params)
       if (params[:search].nil? && search_params.nil?) || (params[:search].is_a?(String) && params[:search].blank?)
         params[:search] = default_params.is_a?(Proc) ? self.instance_eval(&default_params) : default_params
       end
     end
-    
+
     def field_search_params
       search_params || {}
     end
@@ -36,7 +36,7 @@ module ActiveScaffold::Actions
     def field_search_respond_to_html
       render(:action => "field_search")
     end
-    
+
     def field_search_respond_to_js
       render(:partial => "field_search")
     end
@@ -70,7 +70,7 @@ module ActiveScaffold::Actions
     end
 
     private
-    
+
     def search_authorized_filter
       link = active_scaffold_config.field_search.link || active_scaffold_config.field_search.class.link
       raise ActiveScaffold::ActionNotAllowed unless self.send(link.security_method)
