@@ -1,3 +1,18 @@
+require 'active_record_permissions'
+require 'dhtml_confirm'
+require 'paginator'
+require 'responds_to_parent'
+require 'active_scaffold/attribute_params'
+require 'active_scaffold/configurable'
+require 'active_scaffold/constraints'
+require 'active_scaffold/finder'
+require 'active_scaffold/marked_model'
+require 'active_scaffold/config/base'
+require 'active_scaffold/data_structures/column'
+require 'active_scaffold/data_structures/actions'
+require 'active_scaffold/data_structures/action_links'
+require 'active_scaffold/config/form'
+
 module ActiveScaffold
   class ControllerNotFound < RuntimeError; end
   class DependencyFailure < RuntimeError; end
