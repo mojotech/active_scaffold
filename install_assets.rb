@@ -9,7 +9,6 @@ Dir.chdir(Dir.getwd.sub(/vendor.*/, '')) do
 def copy_files(source_path, destination_path, directory, file_mask = '*.*', clean_up_destination = false)
   source, destination = File.join(directory, source_path), File.join(Rails.root, destination_path)
   FileUtils.mkdir_p(destination) unless File.exist?(destination)
-  Dir.glob('*.so')
 
   FileUtils.rm Dir.glob("#{destination}/*") if clean_up_destination
   FileUtils.cp_r(Dir.glob("#{source}/#{file_mask}"), destination)
