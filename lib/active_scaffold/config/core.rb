@@ -224,10 +224,6 @@ module ActiveScaffold::Config
       Dir.entries(javascript_dir).reject { |e| !e.match(/\.js$/) or (!self.dhtml_history? and e.match('dhtml_history')) }
     end
 
-    def self.available_frontends
-      frontends_dir = File.join(Rails.root, "vendor", "plugins", ActiveScaffold::Config::Core.plugin_directory, "frontends")
-      Dir.entries(frontends_dir).reject { |e| e.match(/^\./) } # Get rid of files that start with .
-    end
   end
 end
 
