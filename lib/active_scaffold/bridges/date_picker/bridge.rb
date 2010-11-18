@@ -15,7 +15,7 @@ ActiveScaffold::Bridges.bridge "DatePicker" do
       FileUtils.rm(File.join(destination, 'date_picker_bridge.js')) if File.exist?(File.join(destination, 'date_picker_bridge.js'))
     end
   end
-  
+
   install? do
     true
   end

@@ -14,26 +14,26 @@ module ActiveScaffold
             tags << active_scaffold_search_date_bridge_range_tag(column, options, current_search)
             tags.join("&nbsp;").html_safe
           end
-          
+
           def active_scaffold_search_date_bridge_comparator_options(column)
             select_options = ActiveScaffold::Finder::DateComparators.collect {|comp| [as_(comp.downcase.to_sym), comp]}
             select_options + ActiveScaffold::Finder::NumericComparators.collect {|comp| [as_(comp.downcase.to_sym), comp]}
           end
-          
+
           def active_scaffold_search_date_bridge_comparator_tag(column, options, current_search)
             select_tag("#{options[:name]}[opt]", options_for_select(active_scaffold_search_date_bridge_comparator_options(column),current_search['opt']), :id => "#{options[:id]}_opt", :class => "as_search_range_option as_search_date_time_option")
           end
-          
+
           def active_scaffold_search_date_bridge_numeric_tag(column, options, current_search)
-            numeric_controls = "" << 
+            numeric_controls = "" <<
             active_scaffold_search_date_bridge_calendar_control(column, options, current_search, 'from') <<
             content_tag(:span, (" - " + active_scaffold_search_date_bridge_calendar_control(column, options, current_search, 'to')).html_safe,
-              :id => "#{options[:id]}_between", :class => "as_search_range_between", :style => "display:#{current_search['opt'] == 'BETWEEN' ? '' : 'none'}")  
+              :id => "#{options[:id]}_between", :class => "as_search_range_between", :style => "display:#{current_search['opt'] == 'BETWEEN' ? '' : 'none'}")
             content_tag("span", numeric_controls.html_safe, :id => "#{options[:id]}_numeric", :style => "display:#{ActiveScaffold::Finder::NumericComparators.include?(current_search['opt']) ? '' : 'none'}")
           end
-  
+
           def active_scaffold_search_date_bridge_trend_tag(column, options, current_search)
-            active_scaffold_date_bridge_trend_tag(column, options, 
+            active_scaffold_date_bridge_trend_tag(column, options,
                                                  {:name_prefix => 'search',
                                                   :number_value => current_search['number'],
                                                   :unit_value => current_search["unit"],
@@ -53,14 +53,14 @@ module ActiveScaffold
              options = ActiveScaffold::Finder::TimeUnits.collect{|unit| [as_(unit.downcase.to_sym), unit]} + options if column_datetime?(column)
              options
           end
-          
+
           def active_scaffold_search_date_bridge_range_tag(column, options, current_search)
-            range_controls = select_tag("search[#{column.name}][range]", 
-              options_for_select( ActiveScaffold::Finder::DateRanges.collect{|range| [as_(range.downcase.to_sym), range]}, current_search["range"]), 
+            range_controls = select_tag("search[#{column.name}][range]",
+              options_for_select( ActiveScaffold::Finder::DateRanges.collect{|range| [as_(range.downcase.to_sym), range]}, current_search["range"]),
              :class => 'text-input')
             content_tag("span", range_controls.html_safe, :id => "#{options[:id]}_range", :style => "display:#{(current_search['opt'] == 'RANGE') ? '' : 'none'}")
           end
-          
+
           def column_datetime?(column)
             (!column.column.nil? && [:datetime, :time].include?(column.column.type))
           end
@@ -79,24 +79,24 @@ module ActiveScaffold
             end
           end
         end
-        
+
         module Finder
           module ClassMethods
             def condition_for_date_bridge_type(column, value, like_pattern)
               operator = ActiveScaffold::Finder::NumericComparators.include?(value[:opt]) && value[:opt] != 'BETWEEN' ? value[:opt] : nil
               from_value, to_value = date_bridge_from_to(column, value)
-              
+
               if column.search_sql.is_a? Proc
                 column.search_sql.call(from_value, to_value, operator)
               else
                 unless operator.nil?
                   ["#{column.search_sql} #{value[:opt]} ?", from_value.to_s(:db)] unless from_value.nil?
                 else
-                  ["#{column.search_sql} BETWEEN ? AND ?", from_value.to_s(:db), to_value.to_s(:db)] unless from_value.nil? && to_value.nil?  
+                  ["#{column.search_sql} BETWEEN ? AND ?", from_value.to_s(:db), to_value.to_s(:db)] unless from_value.nil? && to_value.nil?
                 end
               end
             end
-            
+
             def date_bridge_from_to(column, value)
               conversion = column.column.type == :date ? :to_date : :to_time
               case value[:opt]
@@ -108,7 +108,7 @@ module ActiveScaffold
                 ['from', 'to'].collect { |field| condition_value_for_datetime(value[field], conversion)}
               end
             end
-            
+
             def date_bridge_from_to_for_trend(column, value)
               case value['opt']
               when "PAST"
@@ -135,7 +135,7 @@ module ActiveScaffold
                 return from, to
               end
             end
-            
+
             def date_bridge_from_to_for_range(column, value)
               case value[:range]
               when 'TODAY'
@@ -155,7 +155,7 @@ module ActiveScaffold
                 when 'next'
                   return Time.zone.now.in(1.send(range.to_sym)).send("beginning_of_#{range}".to_sym), Time.zone.now.in(1.send(range.to_sym)).send("end_of_#{range}".to_sym)
                 else
-                  return nil, nil    
+                  return nil, nil
                 end
               end
             end
