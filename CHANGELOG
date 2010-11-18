@@ -1,3 +1,11 @@
+= 3.0.1
+
+- Fixing the requiring of files.
+
+= 3.0.0
+
+- Packaging up vhochstein's fork for Rails 3.0 as a gem.
+
 = 1.2RC1
 
 == FEATURES

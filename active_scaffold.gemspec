@@ -2,7 +2,7 @@ $:.push File.expand_path("../lib", __FILE__)
 
 Gem::Specification.new do |s|
   s.name        = "active_scaffold"
-  s.version     = "3.0.0"
+  s.version     = "3.0.1"
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["Many, see README"]
   s.email       = ["activescaffold@googlegroups.com"]
