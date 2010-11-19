@@ -1,3 +1,6 @@
+require 'render_component' rescue nil
+require 'verification'
+
 require 'active_record_permissions'
 require 'dhtml_confirm'
 require 'paginator'
