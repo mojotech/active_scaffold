@@ -1,3 +1,7 @@
+= 3.0.2
+
+- Two bug fixes and a deprecation silencing.
+
 = 3.0.1
 
 - Fixing the requiring of files.
