@@ -3,9 +3,11 @@ require 'active_scaffold'
 # TODO: clean up extensions. some could be organized for autoloading, and others could be removed entirely.
 Dir["#{File.dirname __FILE__}/lib/extensions/*.rb"].each { |file| require file }
 #Dir["#{File.dirname __FILE__}/lib/generators/*/*.rb"].each { |file| require file }
-Dir["#{File.dirname __FILE__}/lib/active_scaffold/actions/*.rb"].each { |file| require file }
+require "#{File.dirname __FILE__}/lib/active_scaffold/date_structures/set.rb"
 Dir["#{File.dirname __FILE__}/lib/active_scaffold/data_structures/*.rb"].each { |file| require file }
+Dir["#{File.dirname __FILE__}/lib/active_scaffold/actions/*.rb"].each { |file| require file }
 Dir["#{File.dirname __FILE__}/lib/active_scaffold/config/*.rb"].each { |file| require file }
+require "#{File.dirname __FILE__}/lib/active_scaffold/helpers/id_helpers.rb"
 Dir["#{File.dirname __FILE__}/lib/active_scaffold/helpers/*.rb"].each { |file| require file }
 
 ActionController::Base.send(:include, ActiveScaffold)
