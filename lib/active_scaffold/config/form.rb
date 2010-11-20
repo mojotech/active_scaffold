@@ -34,9 +34,9 @@ module ActiveScaffold::Config
       end
       @columns
     end
-    
+
     public :columns=
-    
+
     # whether the form should be multipart
     attr_writer :multipart
     def multipart?

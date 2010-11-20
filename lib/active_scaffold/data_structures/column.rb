@@ -19,7 +19,7 @@ module ActiveScaffold::DataStructures
 
     # Whether to enable add_existing for this column
     attr_accessor :allow_add_existing
-    
+
     # Any extra parameters this particular column uses.  This is for create/update purposes.
     def params
       # lazy initialize
@@ -52,9 +52,9 @@ module ActiveScaffold::DataStructures
     def required?
       @required
     end
-    
+
     attr_reader :update_columns
-    
+
     # update dependent columns after value change in form
     #  update_columns = :name
     #  update_columns = [:name, :age]
@@ -199,7 +199,7 @@ module ActiveScaffold::DataStructures
     cattr_accessor :actions_for_association_links
     @@actions_for_association_links = [:new, :edit, :show]
     attr_accessor :actions_for_association_links
-    
+
     cattr_accessor :association_form_ui
     @@association_form_ui = nil
 
@@ -269,13 +269,13 @@ module ActiveScaffold::DataStructures
       @form_ui = :checkbox if @column and @column.type == :boolean
       @allow_add_existing = true
       @form_ui = self.class.association_form_ui if @association && self.class.association_form_ui
-      
+
       # default all the configurable variables
       self.css_class = ''
       self.required = active_record_class.validators_on(self.name).map(&:class).include? ActiveModel::Validations::PresenceValidator
       self.sort = true
       self.search_sql = true
-      
+
       @weight = estimate_weight
 
       self.includes = (association and not polymorphic_association?) ? [association.name] : []
@@ -308,7 +308,7 @@ module ActiveScaffold::DataStructures
         end
       end
     end
-    
+
     def initialize_search_sql
       self.search_sql = unless self.virtual?
         if association.nil?
@@ -328,13 +328,13 @@ module ActiveScaffold::DataStructures
     def field
       @field ||= [@active_record_class.connection.quote_column_name(@table), field_name].join('.')
     end
-    
+
     def estimate_weight
       if singular_association?
         400
       elsif plural_association?
         500
-      elsif [:created_at, :updated_at].include?(self.name) 
+      elsif [:created_at, :updated_at].include?(self.name)
         600
       elsif [:name, :label, :title].include?(self.name)
         100

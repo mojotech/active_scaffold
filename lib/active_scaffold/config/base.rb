@@ -33,17 +33,17 @@ module ActiveScaffold::Config
         @conf = conf
       end
     end
-    
+
     def formats
       @formats ||= []
     end
-    
+
     def formats=(val)
       @formats=val
     end
-    
+
     private
-    
+
     def columns=(val)
       @columns = ActiveScaffold::DataStructures::ActionColumns.new(*val)
       @columns.action = self

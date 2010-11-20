@@ -33,7 +33,7 @@ module ActiveScaffold::Config
       model ||= @core.label(:count => 1)
       @label ? as_(@label) : as_(:create_model, :model => model)
     end
-    
+
     # whether the form stays open after a create or not
     attr_accessor :persistent
 
