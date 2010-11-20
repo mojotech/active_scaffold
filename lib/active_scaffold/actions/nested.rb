@@ -1,5 +1,9 @@
 module ActiveScaffold::Actions
-  # The Nested module basically handles automatically linking controllers together. It does this by creating column links with the right parameters, and by providing any supporting systems (like a /:controller/nested action for returning associated scaffolds).
+  # The Nested module basically handles automatically linking
+  # controllers together. It does this by creating column links with
+  # the right parameters, and by providing any supporting systems
+  # (like a /:controller/nested action for returning associated
+  # scaffolds).
   module Nested
 
     def self.included(base)

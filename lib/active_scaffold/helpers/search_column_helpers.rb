@@ -59,7 +59,7 @@ module ActiveScaffold
         associated = options.delete :value
         associated = [associated].compact unless associated.is_a? Array
         associated.collect!(&:to_i)
-        
+
         if column.association
           select_options = options_for_association(column.association, false)
         else
@@ -86,7 +86,7 @@ module ActiveScaffold
         if html_options[:multiple]
           html_options[:name] += '[]'
         else
-          options[:include_blank] ||= as_(:_select_) 
+          options[:include_blank] ||= as_(:_select_)
         end
         select(:record, method, select_options, options, html_options)
       end
@@ -107,7 +107,7 @@ module ActiveScaffold
       end
       # we can't use checkbox ui because it's not possible to decide whether search for this field or not
       alias_method :active_scaffold_search_checkbox, :active_scaffold_search_boolean
-      
+
       def active_scaffold_search_null(column, options)
         select_options = []
         select_options << [as_(:_select_), nil]
@@ -148,9 +148,9 @@ module ActiveScaffold
         value = field_search_record_select_value(column)
         active_scaffold_record_select(column, options, value, column.options[:multiple])
       end
-      
+
       def field_search_record_select_value(column)
-        begin 
+        begin
           value = field_search_params[column.name]
           unless value.blank?
             if column.options[:multiple]
@@ -168,13 +168,13 @@ module ActiveScaffold
       def field_search_datetime_value(value)
         DateTime.new(value[:year].to_i, value[:month].to_i, value[:day].to_i, value[:hour].to_i, value[:minute].to_i, value[:second].to_i) unless value.nil? || value[:year].blank?
       end
-      
+
       def active_scaffold_search_datetime(column, options)
         opt_value, from_value, to_value = field_search_params_range_values(column)
         options = column.options.merge(options)
         helper = "select_#{'date' unless options[:discard_date]}#{'time' unless options[:discard_time]}"
-        
-        send(helper, field_search_datetime_value(from_value), {:include_blank => true, :prefix => "#{options[:name]}[from]"}.merge(options)) << 
+
+        send(helper, field_search_datetime_value(from_value), {:include_blank => true, :prefix => "#{options[:name]}[from]"}.merge(options)) <<
         ' - '.html_safe << send(helper, field_search_datetime_value(to_value), {:include_blank => true, :prefix => "#{options[:name]}[to]"}.merge(options))
       end
 
@@ -207,9 +207,9 @@ module ActiveScaffold
       def override_search(form_ui)
         "active_scaffold_search_#{form_ui}"
       end
-      
+
       def visibles_and_hiddens(search_config)
-        visibles = [] 
+        visibles = []
         hiddens = []
         search_config.columns.each do |column|
           next unless column.search_sql
@@ -221,7 +221,7 @@ module ActiveScaffold
         end
         return visibles, hiddens
       end
-      
+
       def searched_by?(column)
         value = field_search_params[column.name]
         case value

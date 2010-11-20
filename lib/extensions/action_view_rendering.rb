@@ -58,10 +58,10 @@ module ActionView::Rendering #:nodoc:
       session["as:#{eid}"] = {:constraints => constraints, :conditions => conditions, :list => {:label => args.first[:label]}}
       options[:params] ||= {}
       options[:params].merge! :eid => eid, :embedded => true
-      
+
       id = "as_#{eid}-content"
       url_options = {:controller => remote_controller.to_s, :action => 'index'}.merge(options[:params])
-      
+
       if respond_to? :render_component
         render_component url_options
       else
@@ -75,7 +75,7 @@ module ActionView::Rendering #:nodoc:
           end
         end
       end
-      
+
     else
       options = args.first
       if options.is_a?(Hash)
@@ -87,7 +87,7 @@ module ActionView::Rendering #:nodoc:
     end
   end
   alias_method_chain :render, :active_scaffold
-  
+
 
   def partial_pieces(partial_path)
     if partial_path.include?('/')
@@ -96,7 +96,7 @@ module ActionView::Rendering #:nodoc:
       return controller.class.controller_path, partial_path
     end
   end
-  
+
   # This is the template finder logic, keep it updated with however we find stuff in rails
   # currently this very similar to the logic in ActionBase::Base.render for options file
   # TODO: Work with rails core team to find a better way to check for this.

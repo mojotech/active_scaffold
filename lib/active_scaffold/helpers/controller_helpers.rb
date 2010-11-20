@@ -4,9 +4,9 @@ module ActiveScaffold
       def self.included(controller)
         controller.class_eval { helper_method :params_for, :main_path_to_return }
       end
-      
+
       include ActiveScaffold::Helpers::IdHelpers
-      
+
       def params_for(options = {})
         # :adapter and :position are one-use rendering arguments. they should not propagate.
         # :sort, :sort_direction, and :page are arguments that stored in the session. they need not propagate.
@@ -22,7 +22,9 @@ module ActiveScaffold
         @params_for.merge(options)
       end
 
-      # Parameters to generate url to the main page (override if the ActiveScaffold is used as a component on another controllers page)
+      # Parameters to generate url to the main page (override if the
+      # ActiveScaffold is used as a component on another controllers
+      # page)
       def main_path_to_return
         parameters = {}
         if params[:parent_controller]

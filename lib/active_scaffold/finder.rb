@@ -98,7 +98,7 @@ module ActiveScaffold
           nil
         end
       end
-      
+
       def condition_value_for_datetime(value, conversion = :to_time)
         if value.is_a? Hash
           Time.zone.local(*[:year, :month, :day, :hour, :minute, :second].collect {|part| value[field][part].to_i}) rescue nil
@@ -132,7 +132,7 @@ module ActiveScaffold
           value
         end
       end
-            
+
       def condition_for_datetime(column, value, like_pattern = nil)
         conversion = column.column.type == :date ? :to_date : :to_time
         from_value = condition_value_for_datetime(value[:from], conversion)
@@ -156,7 +156,7 @@ module ActiveScaffold
           ["#{column.search_sql} = ?", value]
         end
       end
-      
+
       def condition_for_null_type(column, value, like_pattern = nil)
         case value.to_sym
         when :null
@@ -196,8 +196,8 @@ module ActiveScaffold
       :null,
       :not_null
     ]
-    
-    
+
+
 
     def self.included(klass)
       klass.extend ClassMethods
@@ -219,7 +219,7 @@ module ActiveScaffold
     def active_scaffold_habtm_joins
       @active_scaffold_habtm_joins ||= []
     end
-    
+
     def all_conditions
       merge_conditions(
         active_scaffold_conditions,                   # from the search modules
@@ -229,7 +229,7 @@ module ActiveScaffold
         active_scaffold_session_storage[:conditions] # embedding conditions (weaker constraints)
       )
     end
-    
+
     # returns a single record (the given id) but only if it's allowed for the specified action.
     # accomplishes this by checking model.#{action}_authorized?
     # TODO: this should reside on the model, not the controller
@@ -255,19 +255,19 @@ module ActiveScaffold
       options[:count_includes] ||= full_includes unless search_conditions.nil?
 
       klass = beginning_of_chain
-      
+
       # create a general-use options array that's compatible with Rails finders
       finder_options = { :order => options[:sorting].try(:clause),
                          :where => search_conditions,
                          :joins => joins_for_finder,
                          :includes => options[:count_includes]}
-                         
+
       finder_options.merge! custom_finder_options
 
       # NOTE: we must use :include in the count query, because some conditions may reference other tables
       count_query = append_to_query(klass, finder_options.reject{|k, v| [:select, :order].include?(k)})
       count = count_query.count unless options[:pagination] == :infinite
-  
+
       # Converts count to an integer if ActiveRecord returned an OrderedHash
       # that happens when finder_options contains a :group key
       count = count.length if count.is_a? ActiveSupport::OrderedHash
@@ -288,11 +288,11 @@ module ActiveScaffold
       end
       pager.page(options[:page])
     end
-    
+
     def append_to_query(query, options)
       options.assert_valid_keys :where, :select, :group, :order, :limit, :offset, :joins, :includes, :lock, :readonly, :from
       options.reject{|k, v| v.blank?}.inject(query) do |query, (k, v)|
-        query.send((k.to_sym), v) 
+        query.send((k.to_sym), v)
       end
     end
 
@@ -306,7 +306,7 @@ module ActiveScaffold
           []
       end + active_scaffold_habtm_joins
     end
-    
+
     def merge_conditions(*conditions)
       segments = []
       conditions.each do |condition|

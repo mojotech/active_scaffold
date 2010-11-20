@@ -117,14 +117,14 @@ module ActiveScaffold
 
         active_scaffold_checkbox_list(column, select_options, associated_options.collect {|a| a[1]}, options)
       end
-      
+
       def active_scaffold_checkbox_list(column, select_options, associated_ids, options)
         html = "<ul class=\"checkbox-list\" id=\"#{options[:id]}\">"
-        
+
         select_options.each_with_index do |option, i|
           label, id = option
           this_id = "#{options[:id]}_#{i}_id"
-          html << content_tag(:li) do 
+          html << content_tag(:li) do
             check_box_tag("#{options[:name]}[]", id, associated_ids.include?(id), :id => this_id) <<
             content_tag(:label, h(label), :for => this_id)
           end
@@ -184,7 +184,7 @@ module ActiveScaffold
         if [:has_one, :has_many].include?(column.association.macro)
           params.merge!({column.association.primary_key_name => ''})
         end
- 
+
         record_select_options = {:controller => remote_controller, :id => options[:id]}
         record_select_options.merge!(active_scaffold_input_text_options)
         record_select_options.merge!(column.options)
@@ -208,7 +208,7 @@ module ActiveScaffold
       def active_scaffold_input_textarea(column, options)
         text_area(:record, column.name, options.merge(:cols => column.options[:cols], :rows => column.options[:rows], :size => column.options[:size]))
       end
-      
+
       def active_scaffold_input_virtual(column, options)
         options = active_scaffold_input_text_options(options)
         text_field :record, column.name, options.merge(column.options)

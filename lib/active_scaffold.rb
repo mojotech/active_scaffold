@@ -228,8 +228,10 @@ module ActiveScaffold
     end
 
     # Tries to find a controller for the given ActiveRecord model.
-    # Searches in the namespace of the current controller for singular and plural versions of the conventional "#{model}Controller" syntax.
-    # You may override this method to customize the search routine.
+    # Searches in the namespace of the current controller for singular
+    # and plural versions of the conventional "#{model}Controller"
+    # syntax.  You may override this method to customize the search
+    # routine.
     def active_scaffold_controller_for(klass)
       controller_namespace = self.to_s.split('::')[0...-1].join('::') + '::'
       error_message = []

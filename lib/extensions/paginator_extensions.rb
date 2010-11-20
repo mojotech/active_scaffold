@@ -7,12 +7,12 @@ class Paginator
     number_of_pages_without_infinite unless infinite?
   end
   alias_method_chain :number_of_pages, :infinite
-  
+
   # Is this an "infinite" paginator
   def infinite?
     @count.nil?
   end
-  
+
   class Page
     # Checks to see if there's a page after this one
     def next_with_infinite?

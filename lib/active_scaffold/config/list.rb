@@ -9,7 +9,7 @@ module ActiveScaffold::Config
       # full configuration path is: defaults => global table => local table
       @per_page = self.class.per_page
       @page_links_window = self.class.page_links_window
-      
+
       # originates here
       @sorting = ActiveScaffold::DataStructures::Sorting.new(@core.columns)
       @sorting.set_default_sorting(@core.model)
@@ -49,7 +49,7 @@ module ActiveScaffold::Config
       self.columns = @core.columns._inheritable unless @columns # lazy evaluation
       @columns
     end
-    
+
     public :columns=
 
     # how many rows to show at once
@@ -79,7 +79,7 @@ module ActiveScaffold::Config
     def sorting
       @sorting ||= ActiveScaffold::DataStructures::Sorting.new(@core.columns)
     end
-    
+
     # overwrite the includes used for the count sql query
     attr_accessor :count_includes
 
@@ -98,29 +98,29 @@ module ActiveScaffold::Config
     def filtered_message
       @filtered_message ? @filtered_message : :filtered
     end
-    
+
     attr_writer :always_show_search
     def always_show_search
       @always_show_search && !search_partial.blank?
     end
-    
+
     def search_partial
       return "search" if @core.actions.include?(:search)
       return "field_search" if @core.actions.include?(:field_search)
     end
-    
+
     # always show create
     attr_writer :always_show_create
     def always_show_create
       @always_show_create && @core.actions.include?(:create)
     end
-    
+
     # might be set to open nested_link automatically in view
     # conf.nested.add_link(:players)
     # conf.list.nested_auto_open = {:players => 2}
     # will open nested players view if there are 2 or less records in parent
     attr_accessor :nested_auto_open
-    
+
     class UserSettings < UserSettings
       # This label has alread been localized.
       def label
@@ -165,7 +165,7 @@ module ActiveScaffold::Config
           return default_sorting
         end
       end
-      
+
       def count_includes
         @conf.count_includes
       end

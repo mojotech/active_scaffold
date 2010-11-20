@@ -19,9 +19,9 @@ module ActionDispatch
           end
           as_association_routes if options[:association]
         end
-        
+
         def as_association_routes
-          collection do 
+          collection do
             ActionDispatch::Routing::ACTIVE_SCAFFOLD_ASSOCIATION_ROUTING[:collection].each {|name, type| send(type, name)}
           end
           member do
