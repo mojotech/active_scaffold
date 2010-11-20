@@ -1,3 +1,9 @@
+= 3.0.3
+
+- Fixing 'require' ordering
+- Code for nested and subgrouped action links
+- bugfixes for better html generation
+
 = 3.0.2
 
 - Two bug fixes and a deprecation silencing.
