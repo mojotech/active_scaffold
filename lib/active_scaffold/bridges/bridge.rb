@@ -37,11 +37,8 @@ module ActiveScaffold
       end
 
       def self.run_all
-        return false if self.bridges_run
-        ActiveScaffold::Bridges::Bridge.bridges.each{|bridge|
-          bridge.run
-        }
-        self.bridges_run=true
+        self.bridges.each(&:run) unless self.bridges_run
+        self.bridges_run = true
       end
     end
   end
