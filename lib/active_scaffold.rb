@@ -294,7 +294,20 @@ unless Rails::VERSION::MAJOR == 3 && Rails::VERSION::MINOR >= 0
   raise "This version of ActiveScaffold requires Rails 3.0 or higher.  Please use an earlier version."
 end
 
-require File.dirname(__FILE__) + '/../environment'
+# TODO: clean up extensions. some could be organized for autoloading, and others could be removed entirely.
+Dir["#{File.dirname __FILE__}/extensions/*.rb"].each { |file| require file }
+
+ActionController::Base.send(:include, ActiveScaffold)
+ActionController::Base.send(:include, RespondsToParent)
+ActionController::Base.send(:include, ActiveScaffold::Helpers::ControllerHelpers)
+ActionView::Base.send(:include, ActiveScaffold::Helpers::ViewHelpers)
+
+ActionController::Base.class_eval {include ActiveRecordPermissions::ModelUserAccess::Controller}
+ActiveRecord::Base.class_eval     {include ActiveRecordPermissions::ModelUserAccess::Model}
+ActiveRecord::Base.class_eval     {include ActiveRecordPermissions::Permissions}
+
+I18n.load_path += Dir[File.join(File.dirname(__FILE__), 'active_scaffold', 'locale', '*.{rb,yml}')]
+#ActiveScaffold.js_framework = :jquery
 
 ##
 ## Run the install assets script, too, just to make sure
