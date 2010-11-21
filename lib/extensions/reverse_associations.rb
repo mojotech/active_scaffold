@@ -2,7 +2,7 @@ module ActiveRecord
   module Reflection
     class AssociationReflection #:nodoc:
       def reverse_for?(klass)
-        reverse_matches_for(klass).empty? ? false : true
+        ! reverse_matches_for(klass).empty?
       end
 
       attr_writer :reverse
