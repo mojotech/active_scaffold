@@ -5,18 +5,43 @@ require 'active_record_permissions'
 require 'dhtml_confirm'
 require 'paginator'
 require 'responds_to_parent'
-require 'active_scaffold/attribute_params'
-require 'active_scaffold/configurable'
-require 'active_scaffold/constraints'
-require 'active_scaffold/finder'
-require 'active_scaffold/marked_model'
-require 'active_scaffold/config/base'
-require 'active_scaffold/data_structures/column'
-require 'active_scaffold/data_structures/actions'
-require 'active_scaffold/data_structures/action_links'
-require 'active_scaffold/config/form'
 
 module ActiveScaffold
+  autoload :AttributeParams, 'active_scaffold/attribute_params'
+  autoload :Configurable, 'active_scaffold/configurable'
+  autoload :Constraints, 'active_scaffold/constraints'
+  autoload :Finder, 'active_scaffold/finder'
+  autoload :MarkedModel, 'active_scaffold/marked_model'
+
+  def self.active_scaffold_autoload_subdir(dir, mod=self)
+    Dir["#{File.dirname(__FILE__)}/active_scaffold/#{dir}/*.rb"].each { |file|
+      basename = File.basename(file, ".rb")
+      mod.module_eval {
+        autoload basename.camelcase.to_sym, "active_scaffold/#{dir}/#{basename}"
+      }
+    }
+  end
+
+  module Actions
+    ActiveScaffold.active_scaffold_autoload_subdir('actions', self)
+  end
+
+  module Bridges
+    autoload :Bridge, 'active_scaffold/bridges/bridge'
+  end
+
+  module Config
+    ActiveScaffold.active_scaffold_autoload_subdir('config', self)
+  end
+
+  module DataStructures
+    ActiveScaffold.active_scaffold_autoload_subdir('data_structures', self)
+  end
+
+  module Helpers
+    ActiveScaffold.active_scaffold_autoload_subdir('helpers', self)
+  end
+
   class ControllerNotFound < RuntimeError; end
   class DependencyFailure < RuntimeError; end
   class MalformedConstraint < RuntimeError; end
