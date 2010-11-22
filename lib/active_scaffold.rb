@@ -1,3 +1,7 @@
+unless Rails::VERSION::MAJOR == 3 && Rails::VERSION::MINOR >= 0
+  raise "This version of ActiveScaffold requires Rails 3.0 or higher.  Please use an earlier version."
+end
+
 require 'render_component' rescue nil
 require 'verification'
 
@@ -94,6 +98,45 @@ module ActiveScaffold
 
   def self.js_framework
     @@js_framework ||= :prototype
+  end
+
+  ##
+  ## Copy over asset files (javascript/css/images) from directory to public/
+  ##
+  def self.install_assets_from(directory)
+    copy_files("/public", "/public", directory)
+
+    available_frontends = Dir[File.join(directory, 'frontends', '*')].map { |d| File.basename d }
+    [ :stylesheets, :javascripts, :images].each do |asset_type|
+      path = "/public/#{asset_type}/active_scaffold"
+      copy_files(path, path, directory)
+
+      File.open(File.join(Rails.root, path, 'DO_NOT_EDIT'), 'w') do |f|
+        f.puts "Any changes made to files in sub-folders will be lost."
+        f.puts "See http://activescaffold.com/tutorials/faq#custom-css."
+      end
+
+      available_frontends.each do |frontend|
+        if asset_type == :javascripts
+          file_mask = '*.js'
+          source = "/frontends/#{frontend}/#{asset_type}/#{ActiveScaffold.js_framework}"
+        else
+          file_mask = '*.*'
+            source = "/frontends/#{frontend}/#{asset_type}"
+        end
+        destination = "/public/#{asset_type}/active_scaffold/#{frontend}"
+        copy_files(source, destination, directory, file_mask, true)
+      end
+    end
+  end
+
+  private
+  def self.copy_files(source_path, destination_path, directory, file_mask = '*.*', clean_up_destination = false)
+    source, destination = File.join(directory, source_path), File.join(Rails.root, destination_path)
+    FileUtils.mkdir_p(destination) unless File.exist?(destination)
+
+    FileUtils.rm Dir.glob("#{destination}/*") if clean_up_destination
+    FileUtils.cp_r(Dir.glob("#{source}/#{file_mask}"), destination)
   end
 
   module ClassMethods
@@ -287,13 +330,6 @@ module ActiveScaffold
   end
 end
 
-##
-## Initialize the environment
-##
-unless Rails::VERSION::MAJOR == 3 && Rails::VERSION::MINOR >= 0
-  raise "This version of ActiveScaffold requires Rails 3.0 or higher.  Please use an earlier version."
-end
-
 # TODO: clean up extensions. some could be organized for autoloading, and others could be removed entirely.
 Dir["#{File.dirname __FILE__}/extensions/*.rb"].each { |file| require file }
 
@@ -315,7 +351,7 @@ I18n.load_path += Dir[File.join(File.dirname(__FILE__), 'active_scaffold', 'loca
 ##
 Rails::Application.initializer("active_scaffold_install_assets") do
   begin
-    require File.dirname(__FILE__) + '/../install_assets'
+    ActiveScaffold.install_assets_from(File.dirname(__FILE__) + "/..")
   rescue
     raise $! unless Rails.env == 'production'
   end
