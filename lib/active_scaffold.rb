@@ -107,7 +107,7 @@ module ActiveScaffold
     copy_files("/public", "/public", directory)
 
     available_frontends = Dir[File.join(directory, 'frontends', '*')].map { |d| File.basename d }
-    [ :stylesheets, :javascripts, :images].each do |asset_type|
+    [:stylesheets, :javascripts, :images].each do |asset_type|
       path = "/public/#{asset_type}/active_scaffold"
       copy_files(path, path, directory)
 
@@ -122,20 +122,33 @@ module ActiveScaffold
           source = "/frontends/#{frontend}/#{asset_type}/#{ActiveScaffold.js_framework}"
         else
           file_mask = '*.*'
-            source = "/frontends/#{frontend}/#{asset_type}"
+          source = "/frontends/#{frontend}/#{asset_type}"
         end
         destination = "/public/#{asset_type}/active_scaffold/#{frontend}"
-        copy_files(source, destination, directory, file_mask, true)
+        copy_files(source, destination, directory, file_mask)
+      end
+    end
+  end
+
+  def self.root
+    File.dirname(__FILE__) + "/.."
+  end
+
+  def self.delete_stale_assets
+    available_frontends = Dir[File.join(root, 'frontends', '*')].map { |d| File.basename d }
+    [:stylesheets, :javascripts, :images].each do |asset_type|
+      available_frontends.each do |frontend|
+        destination = File.join(Rails.root, "/public/#{asset_type}/active_scaffold/#{frontend}")
+        FileUtils.rm Dir.glob("#{destination}/*")
       end
     end
   end
 
   private
-  def self.copy_files(source_path, destination_path, directory, file_mask = '*.*', clean_up_destination = false)
+  def self.copy_files(source_path, destination_path, directory, file_mask = '*.*')
     source, destination = File.join(directory, source_path), File.join(Rails.root, destination_path)
     FileUtils.mkdir_p(destination) unless File.exist?(destination)
 
-    FileUtils.rm Dir.glob("#{destination}/*") if clean_up_destination
     FileUtils.cp_r(Dir.glob("#{source}/#{file_mask}"), destination)
   end
 
@@ -351,7 +364,8 @@ I18n.load_path += Dir[File.join(File.dirname(__FILE__), 'active_scaffold', 'loca
 ##
 Rails::Application.initializer("active_scaffold_install_assets") do
   begin
-    ActiveScaffold.install_assets_from(File.dirname(__FILE__) + "/..")
+    ActiveScaffold.delete_stale_assets
+    ActiveScaffold.install_assets_from(ActiveScaffold.root)
   rescue
     raise $! unless Rails.env == 'production'
   end
