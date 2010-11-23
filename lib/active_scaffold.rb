@@ -362,7 +362,7 @@ I18n.load_path += Dir[File.join(File.dirname(__FILE__), 'active_scaffold', 'loca
 ## Run the install assets script, too, just to make sure
 ## But at least rescue the action in production
 ##
-Rails::Application.initializer("active_scaffold_install_assets") do
+Rails::Application.initializer("active_scaffold.install_assets") do
   begin
     ActiveScaffold.delete_stale_assets
     ActiveScaffold.install_assets_from(ActiveScaffold.root)
