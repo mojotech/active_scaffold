@@ -92,7 +92,9 @@
 		    :showMonthAfterYear => false
       },
       :datetime_picker_options => {
-        :timeText => 'Uhrzeit'
+        :timeText => 'Uhrzeit',
+        :currentText => 'Jetzt',
+        :closeText => 'Schließen'
       },
       :errors => {
         :template => {
@@ -107,7 +109,8 @@
       :cant_destroy_record => "%{record} kann nicht gelöscht werden",
       :internal_error => 'Fehler bei der Verarbeitung (code 500, Interner Fehler)',
       :version_inconsistency => 'Inkonsistente Versionen - dieser Eintrag wurde verändert nachdem Sie mit der Bearbeitung begonnen haben.',
-      :record_not_saved => 'Eintrag kann nicht gespeichert werden. Ursache unbekannt.'
+      :record_not_saved => 'Eintrag kann nicht gespeichert werden. Ursache unbekannt.',
+      :no_authorization_for_action => "Keine Berechtigung für Aktion %{action}"
     }
   }
 }

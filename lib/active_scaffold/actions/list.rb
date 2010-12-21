@@ -75,7 +75,7 @@ module ActiveScaffold::Actions
 
     def each_record_in_scope
       do_search if respond_to? :do_search
-      finder_options = { :order => "#{active_scaffold_config.model.primary_key} ASC",
+      finder_options = { :order => "#{active_scaffold_config.model.connection.quote_table_name(active_scaffold_config.model.table_name)}.#{active_scaffold_config.model.primary_key} ASC",
                          :conditions => all_conditions,
                          :joins => joins_for_finder}
       finder_options.merge! custom_finder_options
@@ -88,6 +88,45 @@ module ActiveScaffold::Actions
     # You may override the method to customize.
     def list_authorized?
       authorized_for?(:crud_type => :read)
+    end
+
+    # call this method in your action_link action to simplify processing of actions
+    # eg for member action_link :fire
+    # process_action_link_action do |record|
+    #   record.update_attributes(:fired => true)
+    #   self.successful = true
+    #   flash[:info] = 'Player fired'
+    # end
+    def process_action_link_action(render_action = :action_update)
+      if request.get?
+        # someone has disabled javascript, we have to show confirmation form first
+        @record = find_if_allowed(params[:id], :read) if params[:id] && params[:id] && params[:id].to_i > 0
+        respond_to_action(:action_confirmation)
+      else
+        if params[:id] && params[:id] && params[:id].to_i > 0
+          @record = find_if_allowed(params[:id], (request.post? || request.put?) ? :update : :delete)
+          unless @record.nil?
+            yield @record
+          else
+            self.successful = false
+            flash[:error] = as_(:no_authorization_for_action, :action => action_name)
+          end
+        else
+          yield
+        end
+        respond_to_action(render_action)
+      end
+    end
+
+    def action_confirmation_respond_to_html(confirm_action = action_name.to_sym)
+      link = active_scaffold_config.action_links[confirm_action]
+      render :action => 'action_confirmation', :locals => {:record => @record, :link => link}
+    end
+
+    def action_update_respond_to_html
+      do_search if respond_to? :do_search
+      do_list
+      redirect_to :action => 'index'
     end
 
     def action_update_respond_to_js
@@ -110,10 +149,16 @@ module ActiveScaffold::Actions
     def list_authorized_filter
       raise ActiveScaffold::ActionNotAllowed unless list_authorized?
     end
+
     def list_formats
       (default_formats + active_scaffold_config.formats + active_scaffold_config.list.formats).uniq
     end
+
     def action_update_formats
+      (default_formats + active_scaffold_config.formats).uniq
+    end
+
+    def action_confirmation_formats
       (default_formats + active_scaffold_config.formats).uniq
     end
 

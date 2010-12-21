@@ -128,6 +128,14 @@ module ActiveScaffold
         action_link_html(link, url_options, html_options)
       end
 
+      def render_group_action_link(link, url_options, options, record = nil)
+        if link.type == :member && !options[:authorized]
+          action_link_html(link, nil, {:class => "disabled #{link.action}#{link.html_options[:class].blank? ? '' : (' ' + link.html_options[:class])}"})
+        else
+          render_action_link(link, url_options, record)
+        end
+      end
+
       def action_link_url_options(link, url_options, record, options = {})
         url_options = url_options.clone
         url_options[:action] = link.action
@@ -135,7 +143,7 @@ module ActiveScaffold
         url_options.delete(:search) if link.controller and link.controller.to_s != params[:controller]
         url_options.merge! link.parameters if link.parameters
         url_options_for_nested_link(link.column, record, link, url_options, options) if link.nested_link?
-        url_options[:_method] = link.method if link.inline? && link.method != :get
+        url_options[:_method] = link.method if !link.confirm? && link.inline? && link.method != :get
         url_options
       end
 
@@ -144,14 +152,17 @@ module ActiveScaffold
         html_options.reverse_merge! link.html_options.merge(:class => link.action)
 
         # Needs to be in html_options to as the adding _method to the url is no longer supported by Rails
-        html_options[:method] = link.method if !link.inline? && link.method != :get
+        html_options[:method] = link.method if link.method != :get
 
         html_options['data-confirm'] = link.confirm(record.try(:to_label)) if link.confirm?
         html_options['data-position'] = link.position if link.position and link.inline?
         html_options[:class] += ' as_action' if link.inline?
-        html_options[:popup] = true if link.popup?
+        if link.popup?
+          html_options['data-popup'] = true
+          html_options[:target] = '_blank'
+        end
         html_options[:id] = link_id
-        html_options[:remote] = true unless link.page?
+        html_options[:remote] = true unless link.page? || link.popup?
         if link.dhtml_confirm?
           html_options[:class] += ' as_action' if !link.inline?
           html_options[:page_link] = 'true' if !link.inline?
@@ -161,6 +172,7 @@ module ActiveScaffold
         html_options[:class] += " #{link.html_options[:class]}" unless link.html_options[:class].blank?
         html_options
       end
+
       def get_action_link_id(url_options, record = nil, column = nil)
         id = url_options[:id] || url_options[:parent_id]
         id = "#{column.association.name}-#{record.id}" if column && column.plural_association?
@@ -231,11 +243,15 @@ module ActiveScaffold
       end
 
       def column_calculation(column)
-        conditions = controller.send(:all_conditions)
-        includes = active_scaffold_config.list.count_includes
-        includes ||= controller.send(:active_scaffold_includes) unless conditions.nil?
-        calculation = beginning_of_chain.calculate(column.calculate, column.name, :conditions => conditions,
-         :joins => controller.send(:joins_for_collection), :include => includes)
+        unless column.calculate.instance_of? Proc
+          conditions = controller.send(:all_conditions)
+          includes = active_scaffold_config.list.count_includes
+          includes ||= controller.send(:active_scaffold_includes) unless conditions.nil?
+          calculation = beginning_of_chain.calculate(column.calculate, column.name, :conditions => conditions,
+           :joins => controller.send(:joins_for_collection), :include => includes)
+        else
+          column.calculate.call(@records)
+        end
       end
 
       def render_column_calculation(column)
@@ -243,7 +259,7 @@ module ActiveScaffold
         override_formatter = "render_#{column.name}_#{column.calculate}"
         calculation = send(override_formatter, calculation) if respond_to? override_formatter
 
-        "#{as_(column.calculate)}: #{format_column_value nil, column, calculation}"
+        "#{"#{as_(column.calculate)}: " unless column.calculate.is_a? Proc}#{format_column_value nil, column, calculation}"
       end
 
       def column_show_add_existing(column)

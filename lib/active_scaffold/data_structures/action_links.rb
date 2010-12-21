@@ -4,6 +4,7 @@ module ActiveScaffold::DataStructures
 
     def initialize
       @set = []
+      @name = :root
     end
 
     # adds an ActionLink, creating one from the arguments if need be
@@ -16,7 +17,10 @@ module ActiveScaffold::DataStructures
       # NOTE: this duplicate check should be done by defining the comparison operator for an Action data structure
       existing = find_duplicate(link)
       unless existing
-        subgroup(link.type, link.type).add_to_set(link)
+        # That s for backwards compatibility if we are in root of action_links
+        # we have to move actionlink into members or collection subgroup
+        group = (name == :root ? subgroup(link.type, link.type) : self)
+        group.add_to_set(link)
         link
       else
         existing
@@ -28,31 +32,48 @@ module ActiveScaffold::DataStructures
       @set << link
     end
 
-    # finds an ActionLink by matching the action
-    def [](val)
-      @set.find do |item|
-        if item.is_a?(ActiveScaffold::DataStructures::ActionLinks)
-          item[val]
-        else
-          item.action == val.to_s
-        end
+    # adds a link to a specific group
+    # groups are represented as a string separated by a dot
+    # eg member.crud
+    def add_to_group(link, group = nil)
+      if group
+        group.split('.').inject(root){|group, group_name| group.send(group_name)}.add link
+      else
+        root << link
       end
     end
 
-    def find_duplicate(link)
-      @set.find do |item|
+    # finds an ActionLink by matching the action
+    def [](val)
+      links = []
+      @set.each do |item|
         if item.is_a?(ActiveScaffold::DataStructures::ActionLinks)
-          item.find_duplicate(link)
+          collected = item[val]
+          links << collected unless collected.nil?
         else
-          item.action == link.action and item.controller == link.controller and item.parameters == link.parameters
+          links << item if item.action == val.to_s
         end
       end
+      links.first
+    end
+
+    def find_duplicate(link)
+      links = []
+      @set.each do |item|
+        if item.is_a?(ActiveScaffold::DataStructures::ActionLinks)
+          collected = item.find_duplicate(link)
+          links << collected unless collected.nil?
+        else
+          links << item if item.action == link.action and item.controller == link.controller and item.parameters == link.parameters
+        end
+      end
+      links.first
     end
 
     def delete(val)
       @set.delete_if do |item|
         if item.is_a?(ActiveScaffold::DataStructures::ActionLinks)
-          delete(val)
+          item.delete(val)
         else
           item.action == val.to_s
         end
@@ -60,9 +81,13 @@ module ActiveScaffold::DataStructures
     end
 
     # iterates over the links, possibly by type
-    def each(type = nil)
+    def each(type = nil, &block)
       @set.each {|item|
-        yield item
+        if item.is_a?(ActiveScaffold::DataStructures::ActionLinks)
+          item.each(type, &block)
+        else
+          yield item
+        end
       }
     end
 
@@ -74,19 +99,22 @@ module ActiveScaffold::DataStructures
 
     def traverse(controller, options = {}, &block)
       traverse_method = options.delete(:reverse).nil? ? :each : :reverse_each
+      options[:level] ||= -1
+      options[:level] += 1
+      first_action = true
       @set.send(traverse_method) do |link|
         if link.is_a?(ActiveScaffold::DataStructures::ActionLinks)
-          # add top node only if there is anything in the list
-          #yield({:kind => :node, :level => 1, :last => false, :link => link})
-          yield(link, nil, {:node => :start_traversing})
+          yield(link, nil, {:node => :start_traversing, :first_action => first_action, :level => options[:level]})
           link.traverse(controller,options, &block)
-          yield(link, nil, {:node => :finished_traversing})
-          #yield({:kind => :completed_group, :level => 1, :last => false, :link => link})
-        elsif controller.nil? || !skip_action_link(controller, link, options[:record])
+          yield(link, nil, {:node => :finished_traversing, :first_action => first_action, :level => options[:level]})
+          first_action = false
+        elsif controller.nil? || !skip_action_link(controller, link, *(Array(options[:record])))
           authorized = options[:for].nil? ? true : options[:for].authorized_for?(:crud_type => link.crud_type, :action => link.action)
-          yield(self, link, {:authorized => authorized})
+          yield(self, link, {:authorized => authorized, :first_action => first_action, :level => options[:level]})
+          first_action = false
         end
       end
+      options[:level] -= 1
     end
 
     def collect
