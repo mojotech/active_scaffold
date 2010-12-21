@@ -2,8 +2,14 @@ unless Rails::VERSION::MAJOR == 3 && Rails::VERSION::MINOR >= 0
   raise "This version of ActiveScaffold requires Rails 3.0 or higher.  Please use an earlier version."
 end
 
-require 'render_component' rescue nil
-require 'verification'
+begin
+  require 'render_component'
+rescue LoadError
+end
+begin
+  require 'verification'
+rescue LoadError
+end
 
 require 'active_record_permissions'
 require 'dhtml_confirm'
