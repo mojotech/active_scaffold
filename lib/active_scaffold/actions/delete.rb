@@ -5,6 +5,7 @@ module ActiveScaffold::Actions
     end
 
     def destroy
+      params.delete :destroy_action
       process_action_link_action(:destroy) do |record|
         do_destroy
       end
@@ -12,11 +13,20 @@ module ActiveScaffold::Actions
 
     protected
     def destroy_respond_to_html
-      flash[:info] = as_(:deleted_model, :model => @record.to_label) if self.successful?
+      if self.successful?
+        flash[:info] = as_(:deleted_model, :model => @record.to_label)
+      else
+        #error_message_for not available in controller...
+        #flash[:error] = active_scaffold_error_messages_for(@record, :object_name => "#{@record.class.model_name.human.downcase}#{@record.new_record? ? '' : ": #{@record.to_label}"}", :header_message => '', :message => "#{@record.class.model_name.human.downcase}#{@record.new_record? ? '' : ": #{@record.to_label}"}", :container_tag => nil, :list_type => :br)
+      end
       return_to_main
     end
 
     def destroy_respond_to_js
+      if successful? && active_scaffold_config.delete.refresh_list && !render_parent?
+        do_search if respond_to? :do_search
+        do_list
+      end
       render(:action => 'destroy')
     end
 

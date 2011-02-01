@@ -11,10 +11,12 @@ begin
 rescue LoadError
 end
 
-require 'active_record_permissions'
-require 'dhtml_confirm'
-require 'paginator'
-require 'responds_to_parent'
+require 'active_scaffold_assets'
+require 'active_scaffold/active_record_permissions'
+require 'active_scaffold/paginator'
+require 'active_scaffold/responds_to_parent'
+
+require 'active_scaffold/version'
 
 module ActiveScaffold
   autoload :AttributeParams, 'active_scaffold/attribute_params'
@@ -23,8 +25,8 @@ module ActiveScaffold
   autoload :Finder, 'active_scaffold/finder'
   autoload :MarkedModel, 'active_scaffold/marked_model'
 
-  def self.active_scaffold_autoload_subdir(dir, mod=self)
-    Dir["#{File.dirname(__FILE__)}/active_scaffold/#{dir}/*.rb"].each { |file|
+  def self.autoload_subdir(dir, mod=self, root = File.dirname(__FILE__))
+    Dir["#{root}/active_scaffold/#{dir}/*.rb"].each { |file|
       basename = File.basename(file, ".rb")
       mod.module_eval {
         autoload basename.camelcase.to_sym, "active_scaffold/#{dir}/#{basename}"
@@ -33,7 +35,7 @@ module ActiveScaffold
   end
 
   module Actions
-    ActiveScaffold.active_scaffold_autoload_subdir('actions', self)
+    ActiveScaffold.autoload_subdir('actions', self)
   end
 
   module Bridges
@@ -41,15 +43,15 @@ module ActiveScaffold
   end
 
   module Config
-    ActiveScaffold.active_scaffold_autoload_subdir('config', self)
+    ActiveScaffold.autoload_subdir('config', self)
   end
 
   module DataStructures
-    ActiveScaffold.active_scaffold_autoload_subdir('data_structures', self)
+    ActiveScaffold.autoload_subdir('data_structures', self)
   end
 
   module Helpers
-    ActiveScaffold.active_scaffold_autoload_subdir('helpers', self)
+    ActiveScaffold.autoload_subdir('helpers', self)
   end
 
   class ControllerNotFound < RuntimeError; end
@@ -106,56 +108,8 @@ module ActiveScaffold
     @@js_framework ||= :prototype
   end
 
-  ##
-  ## Copy over asset files (javascript/css/images) from directory to public/
-  ##
-  def self.install_assets_from(directory)
-    copy_files("/public", "/public", directory)
-
-    available_frontends = Dir[File.join(directory, 'frontends', '*')].map { |d| File.basename d }
-    [:stylesheets, :javascripts, :images].each do |asset_type|
-      path = "/public/#{asset_type}/active_scaffold"
-      copy_files(path, path, directory)
-
-      File.open(File.join(Rails.root, path, 'DO_NOT_EDIT'), 'w') do |f|
-        f.puts "Any changes made to files in sub-folders will be lost."
-        f.puts "See http://activescaffold.com/tutorials/faq#custom-css."
-      end
-
-      available_frontends.each do |frontend|
-        if asset_type == :javascripts
-          file_mask = '*.js'
-          source = "/frontends/#{frontend}/#{asset_type}/#{ActiveScaffold.js_framework}"
-        else
-          file_mask = '*.*'
-          source = "/frontends/#{frontend}/#{asset_type}"
-        end
-        destination = "/public/#{asset_type}/active_scaffold/#{frontend}"
-        copy_files(source, destination, directory, file_mask)
-      end
-    end
-  end
-
   def self.root
     File.dirname(__FILE__) + "/.."
-  end
-
-  def self.delete_stale_assets
-    available_frontends = Dir[File.join(root, 'frontends', '*')].map { |d| File.basename d }
-    [:stylesheets, :javascripts, :images].each do |asset_type|
-      available_frontends.each do |frontend|
-        destination = File.join(Rails.root, "/public/#{asset_type}/active_scaffold/#{frontend}")
-        FileUtils.rm Dir.glob("#{destination}/*")
-      end
-    end
-  end
-
-  private
-  def self.copy_files(source_path, destination_path, directory, file_mask = '*.*')
-    source, destination = File.join(directory, source_path), File.join(Rails.root, destination_path)
-    FileUtils.mkdir_p(destination) unless File.exist?(destination)
-
-    FileUtils.cp_r(Dir.glob("#{source}/#{file_mask}"), destination)
   end
 
   module ClassMethods
@@ -187,6 +141,7 @@ module ActiveScaffold
       @active_scaffold_custom_paths = []
 
       self.active_scaffold_superclasses_blocks.each {|superblock| self.active_scaffold_config.configure &superblock}
+      self.active_scaffold_config.sti_children = nil # reset sti_children if set in parent block
       self.active_scaffold_config.configure &block if block_given?
       self.active_scaffold_config._configure_sti unless self.active_scaffold_config.sti_children.nil?
       self.active_scaffold_config._load_action_columns
@@ -208,17 +163,31 @@ module ActiveScaffold
           if link = active_scaffold_config.send(mod).link rescue nil
             if link.is_a? Array
               link.each {|current| active_scaffold_config.action_links.add_to_group(current, active_scaffold_config.send(mod).action_group)}
-            else
+            elsif link.is_a? ActiveScaffold::DataStructures::ActionLink
               active_scaffold_config.action_links.add_to_group(link, active_scaffold_config.send(mod).action_group)
             end
-            
           end
         end
       end
       active_scaffold_paths.each do |path|
         self.append_view_path(ActionView::ActiveScaffoldResolver.new(path))
       end
-      self.active_scaffold_config._add_sti_create_links if self.active_scaffold_config.add_sti_create_links?
+      self._add_sti_create_links if self.active_scaffold_config.add_sti_create_links?
+    end
+
+    # To be called after include action modules
+    def _add_sti_create_links
+      new_action_link = active_scaffold_config.action_links.collection['new']
+      unless new_action_link.nil? || active_scaffold_config.sti_children.empty?
+        active_scaffold_config.action_links.collection.delete('new')
+        active_scaffold_config.sti_children.each do |child|
+          new_sti_link = Marshal.load(Marshal.dump(new_action_link)) # deep clone
+          new_sti_link.label = child.to_s.camelize.constantize.model_name.human
+          new_sti_link.parameters = {:parent_sti => controller_path}
+          new_sti_link.controller = Proc.new { active_scaffold_controller_for(child.to_s.camelize.constantize).controller_path }
+          active_scaffold_config.action_links.collection.create.add(new_sti_link)
+        end
+      end
     end
 
     # Create the automatic column links. Note that this has to happen when configuration is *done*, because otherwise the Nested module could be disabled. Actually, it could still be disabled later, couldn't it?
@@ -226,14 +195,22 @@ module ActiveScaffold
       return unless active_scaffold_config.actions.include? :list and active_scaffold_config.actions.include? :nested
       active_scaffold_config.columns.each do |column|
         next unless column.link.nil? and column.autolink?
-        action_link = link_for_association(column)
-        column.set_link(action_link) unless action_link.nil?
+        #lazy load of action_link, cause it was really slowing down app in dev mode
+        #and might lead to trouble cause of cyclic constantization of controllers
+        #and might be unnecessary cause it is done before columns are configured
+        column.set_link(Proc.new {|col| link_for_association(col)})
       end
     end
 
     def link_for_association(column, options = {})
       begin
-        controller = column.polymorphic_association? ? :polymorph : active_scaffold_controller_for(column.association.klass)
+        controller = if column.polymorphic_association?
+          :polymorph
+        elsif options.include?(:controller)
+          "#{options[:controller].to_s.camelize}Controller".constantize
+        else
+          active_scaffold_controller_for(column.association.klass)
+        end
       rescue ActiveScaffold::ControllerNotFound
         controller = nil
       end
@@ -241,7 +218,7 @@ module ActiveScaffold
       unless controller.nil?
         options.reverse_merge! :label => column.label, :position => :after, :type => :member, :controller => (controller == :polymorph ? controller : controller.controller_path), :column => column
         options[:parameters] ||= {}
-        options[:parameters].reverse_merge! :parent_model => column.active_record_class.to_s.underscore, :association => column.association.name
+        options[:parameters].reverse_merge! :parent_scaffold => controller_path, :association => column.association.name
         if column.plural_association?
           # note: we can't create nested scaffolds on :through associations because there's no reverse association.
 
@@ -260,7 +237,7 @@ module ActiveScaffold
     def link_for_association_as_scope(scope, options = {})
       options.reverse_merge! :label => scope, :position => :after, :type => :member, :controller => controller_path
       options[:parameters] ||= {}
-      options[:parameters].reverse_merge! :parent_model => active_scaffold_config.model.to_s.underscore, :named_scope => scope
+      options[:parameters].reverse_merge! :parent_scaffold => controller_path, :named_scope => scope
       ActiveScaffold::DataStructures::ActionLink.new('index', options)
     end
 
@@ -354,30 +331,18 @@ module ActiveScaffold
   end
 end
 
-# TODO: clean up extensions. some could be organized for autoloading, and others could be removed entirely.
-Dir["#{File.dirname __FILE__}/extensions/*.rb"].each { |file| require file }
-
-ActionController::Base.send(:include, ActiveScaffold)
-ActionController::Base.send(:include, RespondsToParent)
-ActionController::Base.send(:include, ActiveScaffold::Helpers::ControllerHelpers)
-ActionView::Base.send(:include, ActiveScaffold::Helpers::ViewHelpers)
-
-ActionController::Base.class_eval {include ActiveRecordPermissions::ModelUserAccess::Controller}
-ActiveRecord::Base.class_eval     {include ActiveRecordPermissions::ModelUserAccess::Model}
-ActiveRecord::Base.class_eval     {include ActiveRecordPermissions::Permissions}
-
-I18n.load_path += Dir[File.join(File.dirname(__FILE__), 'active_scaffold', 'locale', '*.{rb,yml}')]
-#ActiveScaffold.js_framework = :jquery
+require 'active_scaffold_env'
 
 ##
 ## Run the install assets script, too, just to make sure
 ## But at least rescue the action in production
 ##
+
 Rails::Application.initializer("active_scaffold.install_assets") do
   begin
-    ActiveScaffold.delete_stale_assets
-    ActiveScaffold.install_assets_from(ActiveScaffold.root)
+    ActiveScaffoldAssets.copy_to_public(ActiveScaffold.root, {:clean_up_destination => true})
   rescue
     raise $! unless Rails.env == 'production'
   end
-end
+end if defined?(ACTIVE_SCAFFOLD_GEM)
+

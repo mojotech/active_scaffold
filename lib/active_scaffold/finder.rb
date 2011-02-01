@@ -125,7 +125,7 @@ module ActiveScaffold
         native = '.'
         delimiter = I18n.t('number.format.delimiter')
         separator = I18n.t('number.format.separator')
-
+        return value if value.blank? || !value.is_a?(String)
         unless delimiter == native && !value.include?(separator) && value !~ /\.\d{3}$/
           value.gsub(/[^0-9\-#{I18n.t('number.format.separator')}]/, '').gsub(I18n.t('number.format.separator'), native)
         else
@@ -292,6 +292,7 @@ module ActiveScaffold
     def append_to_query(query, options)
       options.assert_valid_keys :where, :select, :group, :order, :limit, :offset, :joins, :includes, :lock, :readonly, :from
       options.reject{|k, v| v.blank?}.inject(query) do |query, (k, v)|
+        query = query.except(:order) if k.to_sym == :order
         query.send((k.to_sym), v)
       end
     end

@@ -45,7 +45,7 @@ document.observe("dom:loaded", function() {
   document.on('submit', 'form.as_form.as_remote_upload', function(event) {
     var as_form = event.findElement('form');
     if (as_form && as_form.readAttribute('data-loading') == 'true') {
-      setTimeout("ActiveScaffold.disable_form('" + as_form.id + "')", 10);
+      setTimeout("ActiveScaffold.disable_form('" + as_form.readAttribute('id') + "')", 10);
     }
     return true;
   });
@@ -187,7 +187,7 @@ document.observe("dom:loaded", function() {
             
       if (mode === 'clone') {
         options.nodeIdSuffix = record_id;
-        options.inplacePatternSelector = '#' + column_heading.id + ' .as_inplace_pattern';
+        options.inplacePatternSelector = '#' + column_heading.readAttribute('id') + ' .as_inplace_pattern';
         options['onFormCustomization'] = new Function('element', 'form', 'element.clonePatternField();');
       }
       
@@ -258,14 +258,14 @@ document.observe("dom:loaded", function() {
   });
   document.on('change', 'select.as_search_range_option', function(event) {
     var element = event.findElement();
-    Element[element.value == 'BETWEEN' ? 'show' : 'hide'](element.id.sub('_opt', '_between'));
+    Element[element.value == 'BETWEEN' ? 'show' : 'hide'](element.readAttribute('id').sub('_opt', '_between'));
     return true;
   });
   document.on('change', 'select.as_search_date_time_option', function(event) {
     var element = event.findElement();
-    Element[!(element.value == 'PAST' || element.value == 'FUTURE' || element.value == 'RANGE') ? 'show' : 'hide'](element.id.sub('_opt', '_numeric'));
-    Element[(element.value == 'PAST' || element.value == 'FUTURE') ? 'show' : 'hide'](element.id.sub('_opt', '_trend'));
-    Element[element.value == 'RANGE' ? 'show' : 'hide'](element.id.sub('_opt', '_range'));
+    Element[!(element.value == 'PAST' || element.value == 'FUTURE' || element.value == 'RANGE') ? 'show' : 'hide'](element.readAttribute('id').sub('_opt', '_numeric'));
+    Element[(element.value == 'PAST' || element.value == 'FUTURE') ? 'show' : 'hide'](element.readAttribute('id').sub('_opt', '_trend'));
+    Element[element.value == 'RANGE' ? 'show' : 'hide'](element.readAttribute('id').sub('_opt', '_range'));
     return true;
   });
   document.on('change', 'select.as_update_date_operator', function(event) {
@@ -364,7 +364,7 @@ var ActiveScaffold = {
   replace: function(element, html) {
     element = $(element)
     Element.replace(element, html);
-    element = $(element.id);
+    element = $(element.readAttribute('id'));
     return element;
   },
     
@@ -392,14 +392,14 @@ var ActiveScaffold = {
   
   disable_form: function(as_form) {
     as_form = $(as_form)
-    var loading_indicator = $(as_form.id.sub('-form', '-loading-indicator'));
+    var loading_indicator = $(as_form.readAttribute('id').sub('-form', '-loading-indicator'));
     if (loading_indicator) loading_indicator.style.visibility = 'visible';
     as_form.disable();
   },
   
   enable_form: function(as_form) {
     as_form = $(as_form)
-    var loading_indicator = $(as_form.id.sub('-form', '-loading-indicator'));
+    var loading_indicator = $(as_form.readAttribute('id').sub('-form', '-loading-indicator'));
     if (loading_indicator) loading_indicator.style.visibility = 'hidden';
     as_form.enable();
   },
@@ -408,8 +408,9 @@ var ActiveScaffold = {
     Form.focusFirstElement(form_element);
   },  
   
-  create_record_row: function(tbody, html, options) {
-    tbody = $(tbody);
+  create_record_row: function(active_scaffold_id, html, options) {
+    tbody = $(active_scaffold_id).down('tbody.records');
+
     var new_row = null;
     
     if (options.insert_at == 'top') {
@@ -444,6 +445,7 @@ var ActiveScaffold = {
       }
     }
     row.remove();
+    tbody = $(tbody);
     this.stripe(tbody);
     this.decrement_record_count(tbody.up('div.active-scaffold'));
     this.reload_if_empty(tbody, page_reload_url);
@@ -497,7 +499,7 @@ var ActiveScaffold = {
       options['callback'] = new Function('form', 'return Form.serialize(form) + ' + "'&" + options['params'] + "';");
     }
     span.removeClassName('hover');
-    span.inplace_edit = new ActiveScaffold.InPlaceEditor(span.id, options.url, options)
+    span.inplace_edit = new ActiveScaffold.InPlaceEditor(span.readAttribute('id'), options.url, options)
     span.inplace_edit.enterEditMode();
   },
   
@@ -511,6 +513,7 @@ var ActiveScaffold = {
       var element = event.element();
       toggable.toggle(); 
       element.innerHTML = (toggable.style.display == 'none') ? options.show_label : options.hide_label;
+      return false;
     });
   },
   
@@ -521,8 +524,9 @@ var ActiveScaffold = {
         element.insert(content);
       }
     } else {
-      if (current = $$('#' + element.id + ' tr.association-record')[0]) {
-        this.replace(current, content);
+      var current = $$('#' + element.readAttribute('id') + ' tr.association-record');
+      if (current[0]) {
+        this.replace(current[0], content);
       } else {
         element.insert({top: content});
       }
@@ -725,7 +729,11 @@ ActiveScaffold.ActionLink.Abstract = Class.create({
   },
 
   scaffold_id: function() {
-    return this.tag.up('div.active-scaffold').id;
+    return this.tag.up('div.active-scaffold').readAttribute('id');
+  },
+
+  scaffold: function() {
+    return this.tag.up('div.active-scaffold');
   },
   
   update_flash_messages: function(messages) {
@@ -746,7 +754,7 @@ ActiveScaffold.ActionLink.Abstract = Class.create({
 ActiveScaffold.Actions.Record = Class.create(ActiveScaffold.Actions.Abstract, {
   instantiate_link: function(link) {
     var l = new ActiveScaffold.ActionLink.Record(link, this.target, this.loading_indicator);
-    if (!this.target.readAttribute('data-refresh').blank()) l.refresh_url = this.target.readAttribute('data-refresh');
+    if (this.target.hasAttribute('data-refresh') && !this.target.readAttribute('data-refresh').blank()) l.refresh_url = this.target.readAttribute('data-refresh');
     
     if (l.position) {
       l.url = l.url.append_params({adapter: '_list_inline_adapter'});

@@ -14,7 +14,6 @@ module ActiveScaffold::Actions
 
     def create
       do_create
-      @insert_row = !(nested? && nested.belongs_to?) && params[:parent_controller].nil?
       respond_to_action(:create)
     end
 
@@ -62,6 +61,10 @@ module ActiveScaffold::Actions
     end
 
     def create_respond_to_js
+      if successful? && active_scaffold_config.create.refresh_list && !render_parent?
+        do_search if respond_to? :do_search
+        do_list
+      end
       render :action => 'on_create'
     end
 
@@ -109,16 +112,6 @@ module ActiveScaffold::Actions
         end
       rescue ActiveRecord::RecordInvalid
       end
-    end
-
-    def new_model
-      model = beginning_of_chain
-      if model.columns_hash[model.inheritance_column]
-        params = self.params # in new action inheritance_column must be in params
-        params = params[:record] || {} unless params[model.inheritance_column] # in create action must be inside record key
-        model = params.delete(model.inheritance_column).camelize.constantize if params[model.inheritance_column]
-      end
-      model.new
     end
 
     # override this method if you want to inject data in the record (or its associated objects) before the save

@@ -34,6 +34,15 @@ module ActiveScaffold
       ## Uncategorized
       ##
 
+      def controller_path_for_activerecord(klass)
+        begin
+          controller = active_scaffold_controller_for(klass)
+          controller.controller_path
+        rescue ActiveScaffold::ControllerNotFound
+          controller = nil
+        end
+      end
+
       def generate_temporary_id
         (Time.now.to_f*1000).to_i.to_s
       end
@@ -143,6 +152,7 @@ module ActiveScaffold
         url_options.delete(:search) if link.controller and link.controller.to_s != params[:controller]
         url_options.merge! link.parameters if link.parameters
         url_options_for_nested_link(link.column, record, link, url_options, options) if link.nested_link?
+        url_options_for_sti_link(link.column, record, link, url_options, options) unless record.nil? || active_scaffold_config.sti_children.nil?
         url_options[:_method] = link.method if !link.confirm? && link.inline? && link.method != :get
         url_options
       end
@@ -211,6 +221,16 @@ module ActiveScaffold
         end
       end
 
+      def url_options_for_sti_link(column, record, link, url_options, options = {})
+        #need to find out controller of current record type
+        #and set parameters
+        sti_controller_path = controller_path_for_activerecord(record.class)
+        if sti_controller_path
+          url_options[:controller] = sti_controller_path
+          url_options[:parent_sti] = controller_path
+        end
+      end
+
       def column_class(column, column_value, record)
         classes = []
         classes << "#{column.name}-column"
@@ -231,7 +251,7 @@ module ActiveScaffold
         classes = []
         classes << "#{column.name}-column_heading"
         classes << "sorted #{sorting.direction_of(column).downcase}" if sorting.sorts_on? column
-        classes << column.css_class unless column.css_class.nil?
+        classes << column.css_class unless column.css_class.nil? || column.css_class.is_a?(Proc)
         classes.join(' ')
       end
 
@@ -272,8 +292,9 @@ module ActiveScaffold
         value
       end
 
-      def error_messages_for(*params)
+      def active_scaffold_error_messages_for(*params)
         options = params.extract_options!.symbolize_keys
+        options.reverse_merge!(:container_tag => :div, :list_type => :ul)
 
         objects = Array.wrap(options.delete(:object) || params).map do |object|
           object = instance_variable_get("@#{object}") unless object.respond_to?(:to_model)
@@ -311,17 +332,21 @@ module ActiveScaffold
 
           error_messages = objects.sum do |object|
             object.errors.full_messages.map do |msg|
-              content_tag(:li, msg)
+              options[:list_type] != :br ? content_tag(:li, msg) : msg
             end
-          end.join.html_safe
+          end
+          error_messages = if options[:list_type] == :br
+            error_messages.join('<br/>').html_safe
+          else
+            content_tag(options[:list_type], error_messages.join.html_safe)
+          end
 
-          contents = ''
+          contents = []
           contents << content_tag(options[:header_tag] || :h2, header_message) unless header_message.blank?
           contents << content_tag(:p, message) unless message.blank?
-          contents << content_tag(:ul, error_messages)
-
-          content_tag(:div, contents.html_safe, html)
-
+          contents << error_messages
+          contents = contents.join.html_safe
+          options[:container_tag] ? content_tag(options[:container_tag], contents, html) : contents
         else
           ''
         end

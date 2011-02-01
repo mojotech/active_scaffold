@@ -49,6 +49,10 @@ module ActiveScaffold::Actions
       end
     end
     def update_respond_to_js
+      if successful? && active_scaffold_config.update.refresh_list && !render_parent?
+        do_search if respond_to? :do_search
+        do_list
+      end
       render :action => 'on_update'
     end
     def update_respond_to_xml
@@ -87,10 +91,10 @@ module ActiveScaffold::Actions
         end
       rescue ActiveRecord::RecordInvalid
       rescue ActiveRecord::StaleObjectError
-        @record.errors.add_to_base as_(:version_inconsistency)
+        @record.errors.add(:base, as_(:version_inconsistency))
         self.successful=false
       rescue ActiveRecord::RecordNotSaved
-        @record.errors.add_to_base as_(:record_not_saved) if @record.errors.empty?
+        @record.errors.add(:base, as_(:record_not_saved)) if @record.errors.empty?
         self.successful = false
       end
     end
@@ -100,7 +104,10 @@ module ActiveScaffold::Actions
       if @record.authorized_for?(:crud_type => :update, :column => params[:column])
         column = active_scaffold_config.columns[params[:column].to_sym]
         params[:value] ||= @record.column_for_attribute(params[:column]).default unless @record.column_for_attribute(params[:column]).nil? || @record.column_for_attribute(params[:column]).null
-        params[:value] = column_value_from_param_value(@record, column, params[:value]) unless column.nil?
+        unless column.nil?
+          params[:value] = column_value_from_param_value(@record, column, params[:value])
+          params[:value] = [] if params[:value].nil? && column.form_ui && column.plural_association?
+        end
         @record.send("#{params[:column]}=", params[:value])
         before_update_save(@record)
         @record.save

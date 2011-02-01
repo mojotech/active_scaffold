@@ -44,7 +44,7 @@ module ActiveScaffold
   end
 end
 
-require "#{File.dirname(__FILE__)}/shared/date_bridge"
+require File.join(File.dirname(__FILE__), 'shared', 'date_bridge.rb')
 Dir[File.join(File.dirname(__FILE__), "*/bridge.rb")].each{|bridge_require|
   require bridge_require
 }
