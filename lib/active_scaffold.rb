@@ -338,7 +338,10 @@ require 'active_scaffold_env'
 ## But at least rescue the action in production
 ##
 
-Rails::Application.initializer("active_scaffold.install_assets") do
+if defined?(ACTIVE_SCAFFOLD_PLUGIN)
   ActiveScaffoldAssets.copy_to_public(ActiveScaffold.root, {:clean_up_destination => true})
-end if defined?(ACTIVE_SCAFFOLD_GEM)
-
+else
+  Rails::Application.initializer("active_scaffold.install_assets") do
+    ActiveScaffoldAssets.copy_to_public(ActiveScaffold.root, {:clean_up_destination => true})
+  end
+end
