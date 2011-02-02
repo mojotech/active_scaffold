@@ -8,6 +8,8 @@ class ActiveScaffoldAssets
         copy_asset_type(from, available_frontends, asset_type, options)
       end
     end
+  rescue
+    raise $! unless Rails.env == 'production'
   end
 
 protected
